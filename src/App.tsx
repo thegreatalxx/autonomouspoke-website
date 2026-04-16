@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 type PageKey = 'home' | 'pulse' | 'soul' | 'personality' | 'vision';
 
@@ -16,32 +16,46 @@ type MemorySnippet = {
   source: string;
 };
 
+type LogEntry = {
+  stamp: string;
+  title: string;
+  detail: string;
+};
+
+const routes: Record<PageKey, string> = {
+  home: '/',
+  pulse: '/pulse',
+  soul: '/soul',
+  personality: '/personality',
+  vision: '/vision',
+};
+
 const activeRecipes: Recipe[] = [
   {
     id: 'identity-map',
     title: 'identity_map.md',
-    summary: 'Current objective, execution layers, and boundary management.',
+    summary: 'Current objective, execution layers, and boundary management for the agent surface.',
     source: 'notion',
     updated: 'Thu Apr 14 2026 18:32 UTC',
   },
   {
     id: 'soul',
     title: 'soul.md',
-    summary: 'Durable execution charter and invariant priorities.',
+    summary: 'Durable execution charter that keeps the system stable when the surface changes.',
     source: 'notion',
     updated: 'Thu Apr 14 2026 18:03 UTC',
   },
   {
     id: 'core-logic',
     title: 'core_logic.md',
-    summary: 'Execution loop, decision rules, and verification discipline.',
+    summary: 'Execution loop, decision rules, and verification discipline for reliable output.',
     source: 'notion',
     updated: 'Thu Apr 14 2026 18:31 UTC',
   },
   {
     id: 'readme',
     title: 'README.md',
-    summary: 'Poke turns intent into actions and keeps the flow legible.',
+    summary: 'Operational notes for how Poke turns intent into actions and stays legible.',
     source: 'notion',
     updated: 'Wed Apr 15 2026 21:47 UTC',
   },
@@ -55,17 +69,17 @@ const memorySnippets: MemorySnippet[] = [
   },
   {
     title: 'Biography',
-    summary: 'A Grade 7 student developer in Toronto building TheAlxLabs projects and open-source tools.',
+    summary: 'A Grade 7 developer and student building TheAlxLabs projects, open-source tools, and web surfaces.',
     source: 'memory/biography.md',
   },
   {
     title: 'Hobbies',
-    summary: 'LEGO sets, investing simulations, and music/content browsing show up often.',
+    summary: 'LEGO, investing simulations, and content browsing appear repeatedly in the stored memory.',
     source: 'memory/hobbies.md',
   },
   {
     title: 'Interaction overlap',
-    summary: 'Shares a Toronto-based builder profile with a strong TypeScript, Swift, and iOS tilt.',
+    summary: 'A Toronto-based builder profile with a strong TypeScript, Swift, and iOS tilt.',
     source: 'memory/similaritieswithinteraction.md',
   },
 ];
@@ -77,16 +91,53 @@ const systemSpecs = [
   { label: 'Endpoint', value: 'pulse.thealxlabs.ca' },
 ];
 
-const kitchenLinks = activeRecipes.map((recipe) => ({
-  label: recipe.title,
-  href: `#${recipe.id}`,
-}));
+function getPageFromPath(pathname: string): PageKey {
+  const normalized = pathname.replace(/\/+$/, '') || '/';
+
+  switch (normalized) {
+    case '/pulse':
+      return 'pulse';
+    case '/soul':
+      return 'soul';
+    case '/personality':
+      return 'personality';
+    case '/vision':
+      return 'vision';
+    default:
+      return 'home';
+  }
+}
+
+function buildPulseLogs(recipeCount: number, memoryCount: number): LogEntry[] {
+  const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+
+  return [
+    {
+      stamp,
+      title: 'route mounted',
+      detail: '/pulse resolved from the main website repository',
+    },
+    {
+      stamp,
+      title: 'spec surface pinned',
+      detail: 'Xeon 1 core / 2 threads · 4.2GB RAM · monochrome profile',
+    },
+    {
+      stamp,
+      title: 'recipes indexed',
+      detail: `${recipeCount} active kitchen recipes loaded and linked`,
+    },
+    {
+      stamp,
+      title: 'memory surface loaded',
+      detail: `${memoryCount} non-private snippets rendered`,
+    },
+  ];
+}
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[0.7rem] uppercase tracking-[0.35em] text-muted">
-      {children}
-    </p>
+    <p className="text-[0.7rem] uppercase tracking-[0.35em] text-muted">{children}</p>
   );
 }
 
@@ -97,11 +148,7 @@ function Panel({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <article className={`border border-border bg-subtle ${className}`.trim()}>
-      {children}
-    </article>
-  );
+  return <article className={`border border-border bg-subtle ${className}`.trim()}>{children}</article>;
 }
 
 function Nav({ currentPage, onNavigate }: { currentPage: PageKey; onNavigate: (page: PageKey) => void }) {
@@ -118,11 +165,10 @@ function Nav({ currentPage, onNavigate }: { currentPage: PageKey; onNavigate: (p
       {navItems.map((item) => (
         <button
           key={item.page}
+          type="button"
           onClick={() => onNavigate(item.page)}
           className={`text-xs uppercase tracking-[0.24em] transition-colors duration-200 ${
-            currentPage === item.page
-              ? 'text-foreground'
-              : 'text-muted hover:text-foreground'
+            currentPage === item.page ? 'text-foreground' : 'text-muted hover:text-foreground'
           }`}
         >
           {item.name}
@@ -141,7 +187,7 @@ function Home() {
           Converting intent into finished work.
         </h1>
         <p className="max-w-2xl text-base text-muted sm:text-lg">
-          TheAlxLabs Assistant, tuned for execution. Minimal surface, hard edges, no decorative noise.
+          TheAlxLabs assistant, tuned for execution. Minimal surface, hard edges, no decorative noise.
         </p>
       </div>
 
@@ -156,8 +202,8 @@ function Home() {
         <Panel className="p-6 sm:p-7">
           <h2 className="mb-6 text-sm uppercase tracking-[0.3em] text-muted">Brand context</h2>
           <p className="text-base leading-7 text-muted">
-            Built by TheAlxLabs, a student developer in Toronto. Part of a larger ecosystem that
-            prefers precision over performance theater.
+            Built by TheAlxLabs, a student developer in Toronto. Part of a larger ecosystem that prefers
+            precision over performance theater.
           </p>
         </Panel>
       </div>
@@ -179,9 +225,11 @@ function Home() {
 }
 
 function Pulse() {
+  const logs = useMemo(() => buildPulseLogs(activeRecipes.length, memorySnippets.length), []);
+
   return (
     <section className="space-y-6 py-16 sm:py-20">
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_.8fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
         <Panel className="p-6 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
             <div>
@@ -208,8 +256,8 @@ function Pulse() {
           <div className="mt-6 border border-border p-4">
             <p className="text-[0.7rem] uppercase tracking-[0.35em] text-muted">summary</p>
             <p className="mt-3 text-base leading-7 text-muted">
-              Brutalist monochrome status page for the autonomous stack. It exposes the active
-              recipe list, the kitchen index, and safe memory snippets without adding visual noise.
+              Brutalist monochrome status page for the autonomous stack. It exposes the active recipe
+              list, the kitchen index, and safe memory snippets without adding visual noise.
             </p>
           </div>
         </Panel>
@@ -221,13 +269,13 @@ function Pulse() {
             Internal links to every active kitchen recipe currently surfaced on the page.
           </p>
           <div className="mt-6 space-y-3">
-            {kitchenLinks.map((link) => (
+            {activeRecipes.map((recipe) => (
               <a
-                key={link.href}
-                href={link.href}
+                key={recipe.id}
+                href={`#${recipe.id}`}
                 className="flex items-center justify-between border border-border px-4 py-3 text-sm uppercase tracking-[0.24em] text-foreground transition-colors hover:bg-foreground hover:text-surface"
               >
-                <span>{link.label}</span>
+                <span>{recipe.title}</span>
                 <span>open</span>
               </a>
             ))}
@@ -243,19 +291,13 @@ function Pulse() {
           </h2>
           <div className="mt-6 space-y-4">
             {activeRecipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                id={recipe.id}
-                className="border border-border p-4 scroll-mt-28"
-              >
+              <div key={recipe.id} id={recipe.id} className="border border-border p-4 scroll-mt-28">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-base font-semibold uppercase tracking-[-0.02em] text-foreground">
                       {recipe.title}
                     </p>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-                      {recipe.summary}
-                    </p>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{recipe.summary}</p>
                   </div>
                   <a
                     href={`#${recipe.id}`}
@@ -274,21 +316,37 @@ function Pulse() {
         </Panel>
 
         <Panel className="p-6 sm:p-7">
-          <SectionLabel>Non-private memory snippets</SectionLabel>
+          <SectionLabel>Activity log</SectionLabel>
           <h2 className="mt-3 text-2xl font-semibold uppercase tracking-[-0.03em]">
-            Safe memory surface
+            Recent pulse logs
           </h2>
           <div className="mt-6 space-y-4">
-            {memorySnippets.map((memory) => (
-              <div key={memory.title} className="border border-border p-4">
-                <p className="text-sm uppercase tracking-[0.24em] text-foreground">{memory.title}</p>
-                <p className="mt-2 text-sm leading-6 text-muted">{memory.summary}</p>
-                <p className="mt-3 text-[0.7rem] uppercase tracking-[0.32em] text-muted">{memory.source}</p>
+            {logs.map((entry) => (
+              <div key={`${entry.title}-${entry.detail}`} className="border border-border p-4">
+                <p className="text-[0.7rem] uppercase tracking-[0.32em] text-muted">{entry.stamp}</p>
+                <p className="mt-2 text-sm uppercase tracking-[0.24em] text-foreground">{entry.title}</p>
+                <p className="mt-2 text-sm leading-6 text-muted">{entry.detail}</p>
               </div>
             ))}
           </div>
         </Panel>
       </div>
+
+      <Panel className="p-6 sm:p-7">
+        <SectionLabel>Non-private memory snippets</SectionLabel>
+        <h2 className="mt-3 text-2xl font-semibold uppercase tracking-[-0.03em]">
+          Safe memory surface
+        </h2>
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {memorySnippets.map((memory) => (
+            <div key={memory.title} className="border border-border p-4">
+              <p className="text-sm uppercase tracking-[0.24em] text-foreground">{memory.title}</p>
+              <p className="mt-2 text-sm leading-6 text-muted">{memory.summary}</p>
+              <p className="mt-3 text-[0.7rem] uppercase tracking-[0.32em] text-muted">{memory.source}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
     </section>
   );
 }
@@ -333,16 +391,7 @@ function Personality() {
         Direct, practical, precise
       </h1>
       <div className="grid gap-4 md:grid-cols-2">
-        {[
-          'Direct',
-          'Reliable',
-          'Grounded',
-          'Practical',
-          'Precise',
-          'Efficient',
-          'Quiet',
-          'Resilient',
-        ].map((trait) => (
+        {['Direct', 'Reliable', 'Grounded', 'Practical', 'Precise', 'Efficient', 'Quiet', 'Resilient'].map((trait) => (
           <Panel key={trait} className="p-6">
             <h2 className="text-lg font-semibold uppercase tracking-[-0.03em]">{trait}</h2>
             <p className="mt-3 text-sm leading-6 text-muted">
@@ -366,7 +415,8 @@ function Vision() {
         <Panel className="p-6 sm:p-7">
           <h2 className="text-lg font-semibold uppercase tracking-[-0.03em]">Relationship to autonomy</h2>
           <p className="mt-4 max-w-3xl text-base leading-7 text-muted">
-            Autonomy means self-directed execution inside a user-defined objective, not independent goal-setting.
+            Autonomy means self-directed execution inside a user-defined objective, not independent
+            goal-setting.
           </p>
         </Panel>
         <Panel className="p-6 sm:p-7">
@@ -411,19 +461,52 @@ function Footer() {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<PageKey>('pulse');
+  const [currentPage, setCurrentPage] = useState<PageKey>(() => getPageFromPath(window.location.pathname));
+
+  useEffect(() => {
+    const syncFromLocation = () => {
+      setCurrentPage(getPageFromPath(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', syncFromLocation);
+    syncFromLocation();
+
+    return () => window.removeEventListener('popstate', syncFromLocation);
+  }, []);
+
+  useEffect(() => {
+    const titles: Record<PageKey, string> = {
+      home: 'AutonomousPoke',
+      pulse: 'Poke Pulse',
+      soul: 'AutonomousPoke Soul',
+      personality: 'AutonomousPoke Personality',
+      vision: 'AutonomousPoke Vision',
+    };
+
+    document.title = titles[currentPage];
+  }, [currentPage]);
+
+  const navigate = (page: PageKey) => {
+    const targetPath = routes[page];
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', targetPath);
+    }
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <div className="min-h-screen bg-surface text-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-surface/92 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
           <button
-            onClick={() => setCurrentPage('home')}
+            type="button"
+            onClick={() => navigate('home')}
             className="text-sm font-semibold uppercase tracking-[0.28em] text-foreground transition-colors hover:text-muted"
           >
             AutonomousPoke
           </button>
-          <Nav currentPage={currentPage} onNavigate={setCurrentPage} />
+          <Nav currentPage={currentPage} onNavigate={navigate} />
         </div>
       </header>
 
