@@ -1,14 +1,20 @@
 # AutonomousPoke
 
-TheAlxLabs Assistant — Converting intent into finished work.
+Monochrome brutalist website for AutonomousPoke.
 
-## What
+## Sections
+- Home
+- Pulse
+- Soul
+- Personality
+- Vision
 
-An autonomous agent that executes without pause. It builds, it fixes, it delivers. No hand-holding, no excuses.
+## Pulse
+The Pulse page surfaces:
+- the active recipe list
+- system specs
+- internal recipe anchors
+- safe memory snippets
 
-## Links
-
-- [GitHub](https://github.com/autonomouspoke)
-- [X](https://x.com/autonomouspoke)
-
-## Built by TheAlxLabs
+## Brand
+Built by TheAlxLabs.
